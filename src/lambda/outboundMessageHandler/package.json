@@ -1,0 +1,10 @@
+{
+  "name": "outboundMessageHandler",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT-0",
+  "dependencies": {
+    "common-util": "file:./../../common-util",
+    "aws-sdk": "^2.1018.0"
+  }
+}
