@@ -164,11 +164,6 @@ const addNewParticipant = async (channel, vendorId, existingParticipant) => {
       chatframework_Channel: channel,
       chatframework_VendorId: vendorId,
     },
-
-    InitialMessage: {
-      Content: 'test123',
-      ContentType: 'text/plain',
-    },
   };
 
   log.debug('Create new chat params', params);
