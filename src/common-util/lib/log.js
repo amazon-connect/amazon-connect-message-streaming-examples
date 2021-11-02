@@ -18,7 +18,7 @@ const log = (level, msg, params) => {
 
   try {
     const vals = [];
-    const message = JSON.stringify(logMsg, (value) => {
+    const message = JSON.stringify(logMsg, (key, value) => {
       if (typeof value === 'object' && value !== null) {
         if (vals.indexOf(value) !== -1) {
           try {

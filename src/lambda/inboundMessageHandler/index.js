@@ -6,7 +6,7 @@ const sms = require('./lib/handlers/sms');
 const fb = require('./lib/handlers/facebook');
 
 exports.handler = async (event) => {
-  console.log(`Event: ${JSON.stringify(event)}`);
+  log.debug('Event', event);
 
   if (event.rawPath === undefined) {
     log.debug('SMS Request detected');
