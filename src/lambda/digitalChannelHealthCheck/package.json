@@ -13,6 +13,6 @@
   "license": "MIT-0",
   "dependencies": {
     "common-util": "file:./../../common-util",
-    "aws-sdk": "^2.1018.0"
+    "aws-sdk": "^2.1020.0"
   }
 }
