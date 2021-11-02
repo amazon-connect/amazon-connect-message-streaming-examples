@@ -193,6 +193,19 @@ There are two scenario when this would fail. Either - Streaming is not enabled o
 
 The SNS ARN is malformed, or has different region than the region of Connect Instance. Please note: You might also see error as there is hard limit of max 2 streaming endpoints per chat and you are trying to add more than that.
 
+
+## FAQ
+
+**1. How will bi-directional SMS via those API's render interactive messaging?**
+
+  Out of the box SMS does not support the interactive messaging as it is plain text. Other digital channels such as FB has capability to support this (however, you would need to extend the starter project on github to achieve this).
+
+**2. How can I structure my chat experience so that I identify that this message is 'SMS' channel?** 
+
+  In the [InboundContactHandler Lambda function on line 164](https://github.com/amazon-connect/amazon-connect-message-streaming-examples/blob/main/src/lambda/inboundMessageHandler/lib/inboundHelper.js#L164), when the StartChatContact is invoked, channel is passed through as a contact attribute. In the contact flow you can check via the contact attribute `chatframework_Channel`
+
+
+
 ## Security
 
 See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
