@@ -204,7 +204,9 @@ The SNS ARN is malformed, or has different region than the region of Connect Ins
 
   In the [InboundContactHandler Lambda function on line 164](https://github.com/amazon-connect/amazon-connect-message-streaming-examples/blob/main/src/lambda/inboundMessageHandler/lib/inboundHelper.js#L164), when the StartChatContact is invoked, channel is passed through as a contact attribute. In the contact flow you can check via the contact attribute `chatframework_Channel`
 
+**3. How do I install NPM**
 
+  Please refer to this [document here](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 
 ## Security
 
