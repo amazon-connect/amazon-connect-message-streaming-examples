@@ -204,7 +204,34 @@ The SNS ARN is malformed, or has different region than the region of Connect Ins
 
   In the [InboundContactHandler Lambda function on line 164](https://github.com/amazon-connect/amazon-connect-message-streaming-examples/blob/main/src/lambda/inboundMessageHandler/lib/inboundHelper.js#L164), when the StartChatContact is invoked, channel is passed through as a contact attribute. In the contact flow you can check via the contact attribute `chatframework_Channel`
 
+**3. Which account to use for logging into Facebook developer account?**
 
+  We suggest you to use an existing Facebook account for testing purposes.
+  
+**4. At step 10, what to do with the login review/submit for review?**
+
+  If you are trying this project for testing purpose, you can skip the submit for review step and create the page.
+  
+**5. How to install the npm module?**
+
+  Refer to the [installing and updating] section from the following link : https://github.com/nvm-sh/nvm#intro
+
+**6. How to fix the permission denied error if you run the following bash command : npm -g install typescript?**
+
+  Use the following command to install the latest version of nvm
+  nvm install --lts
+  
+**7. How to pass  AWS Key ID and Secret Key while executing the following command : cdk bootstrap aws://ACCOUNT_ID/AWS_REGION?**
+
+  Refer to the following link with detailed guidance on how to use aws configure command to pass the AWS Key ID and Secret Key:         
+  https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html
+ 
+
+
+  
+
+
+  
 
 ## Security
 
