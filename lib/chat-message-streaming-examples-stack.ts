@@ -346,7 +346,7 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
       });
 
       new cdk.CfnOutput(this, 'FacebookApiGatewayWebhook', {
-        value: digitalChannelApi.apiEndpoint.toString() + '/webhook/facebook/',
+        value: digitalChannelApi.apiEndpoint.toString() + '/webhook/facebook',
       });
 
       // Outbound lambda subscribe to streaming topic
