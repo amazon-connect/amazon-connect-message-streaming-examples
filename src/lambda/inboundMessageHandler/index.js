@@ -27,7 +27,7 @@ const processDigitalChannelRequest = async (event) => {
   switch (event.rawPath) {
     case '/webhook/facebook':
       log.debug('Facebook channel detected.');
-      const validRequest = fb.validateRequest(event);
+      const validRequest = await fb.validateRequest(event);
 
       if (!validRequest) {
         log.warn('Invalid payload signature');
