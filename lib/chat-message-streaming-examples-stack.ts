@@ -35,7 +35,7 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
     }
 
     if(contactFlowId === undefined){
-      throw new Error("Missing Amazon Connect Arn in the context");
+      throw new Error("Missing Amazon Connect Contact flow Id in the context");
     }
 
     if(pinpointAppId === undefined && smsNumber === undefined){
@@ -256,7 +256,7 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
         actions: ['mobiletargeting:SendMessages'],
         effect: iam.Effect.ALLOW,
         resources: [
-          `arn:aws:mobiletargeting:${this.region}:${this.account}:apps/${this.node.tryGetContext("pinpointAppId")}/messages`,
+          `arn:aws:s3:::${}/*`,
         ],
       })
     );
