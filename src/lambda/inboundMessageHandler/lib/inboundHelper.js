@@ -31,7 +31,7 @@ const channelSNSTopicMap = {
 ////////////////////
 // Public Methods //
 ////////////////////
-const getOrCreateParticipant = async (channel, vendorId, message) => {
+const getOrCreateParticipant = async (channel, vendorId, messageBody) => {
   const existingParticipant = await checkForExistingParticipant(
     channel,
     vendorId,
@@ -62,7 +62,7 @@ const getOrCreateParticipant = async (channel, vendorId, message) => {
     channel,
     vendorId,
     existingParticipant,
-    message
+    messageBody
   );
   log.debug('finished creating participant', { channel, vendorId });
 
@@ -154,7 +154,7 @@ const checkForExistingParticipant = async (channel, vendorId) => {
   return result.Items[0];
 };
 
-const addNewParticipant = async (channel, vendorId, existingParticipant, message) => {
+const addNewParticipant = async (channel, vendorId, existingParticipant, messageBody) => {
   const params = {
     ContactFlowId: CONTACT_FLOW_ID,
     InstanceId: getConnectInstanceId(AMAZON_CONNECT_ARN),
@@ -164,7 +164,7 @@ const addNewParticipant = async (channel, vendorId, existingParticipant, message
     Attributes: {
       chatframework_Channel: channel,
       chatframework_VendorId: vendorId,
-      chatframework_InitialMessage: message,
+      chatframework_InitialMessage: messageBody,
     },
   };
 
