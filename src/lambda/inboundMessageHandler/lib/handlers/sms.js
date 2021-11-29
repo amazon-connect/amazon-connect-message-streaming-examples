@@ -9,7 +9,7 @@ const handler = async (messageString) => {
   const participant = await inboundHelper.getOrCreateParticipant(
     CHANNEL_TYPE,
     getVendorId(message),
-    message
+    message.messageBody.trim().toLowerCase()
   );
 
   await inboundHelper.sendMessage(participant, message.messageBody);
