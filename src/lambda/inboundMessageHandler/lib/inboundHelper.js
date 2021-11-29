@@ -34,7 +34,7 @@ const channelSNSTopicMap = {
 const getOrCreateParticipant = async (channel, vendorId, messageBody) => {
   const existingParticipant = await checkForExistingParticipant(
     channel,
-    vendorId,
+    vendorId
   );
 
   // Condition to check 1/ there is an existing chat AND 2/ The chat has not completed (indicated by no S3 transcript) AND 3/ Chat is less than 24 hours old
