@@ -62,7 +62,7 @@ const getOrCreateParticipant = async (channel, vendorId, message) => {
     channel,
     vendorId,
     existingParticipant,
-	message
+    message
   );
   log.debug('finished creating participant', { channel, vendorId });
 
@@ -164,7 +164,7 @@ const addNewParticipant = async (channel, vendorId, existingParticipant, message
     Attributes: {
       chatframework_Channel: channel,
       chatframework_VendorId: vendorId,
-	  chatframework_InitialMessage: message,
+      chatframework_InitialMessage: message,
     },
   };
 
