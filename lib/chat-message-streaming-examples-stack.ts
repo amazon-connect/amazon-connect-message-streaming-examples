@@ -256,7 +256,7 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
         actions: ['mobiletargeting:SendMessages'],
         effect: iam.Effect.ALLOW,
         resources: [
-          `arn:aws:s3:::${}/*`,
+          `arn:aws:mobiletargeting:${this.region}:${this.account}:apps/${this.node.tryGetContext("pinpointAppId")}/messages`,
         ],
       })
     );
