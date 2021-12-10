@@ -13,6 +13,8 @@ const PARTICIPANT_LEFT_CONTENT_TYPE =
   'application/vnd.amazonaws.connect.event.participant.left';
 const CHAT_ENDED_CONTENT_TYPE =
   'application/vnd.amazonaws.connect.event.chat.ended';
+const CUSTOMER = 'CUSTOMER';
+const ALL = 'ALL';
 
 exports.handler = async (event) => {
   log.debug('Event', event);
@@ -69,9 +71,9 @@ const validateRecord = (record) => {
     (record.Sns.MessageAttributes.ParticipantRole === undefined ||
       record.Sns.MessageAttributes.ParticipantRole.Value === CUSTOMER_ROLE) &&
     record.Sns.MessageAttributes.ContentType.Value !== CHAT_ENDED_CONTENT_TYPE &&
-    ((record.Sns.MessageAttributes.MessageVisibility == CUSTOMER || 
-      record.Sns.MessageAttributes.MessageVisibility == ALL) && 
-      record.Sns.MessageAttributes.MessageVisibility != CUSTOMER)
+    ((record.Sns.MessageAttributes.MessageVisibility.Value == CUSTOMER || 
+      record.Sns.MessageAttributes.MessageVisibility.Value == ALL) && 
+      record.Sns.MessageAttributes.MessageVisibility.Value != CUSTOMER)
   ) {
     log.debug('Customer event.  Ignoring.');
     return false;
