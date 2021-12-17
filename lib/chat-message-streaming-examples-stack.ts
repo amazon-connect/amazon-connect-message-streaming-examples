@@ -284,8 +284,8 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
 
     // health check Lambda
     let healthCheckFunction: lambda.Function;
-    let digitalChannelMessageIntegration: apigw2i.LambdaProxyIntegration;
-    let digitalChannelHealthCheckIntegration: apigw2i.LambdaProxyIntegration;
+    let digitalChannelMessageIntegration: apigw2i.HttpLambdaIntegration;
+    let digitalChannelHealthCheckIntegration: apigw2i.HttpLambdaIntegration;
     let digitalChannelApi;
 
     if(enableFB){
@@ -313,13 +313,12 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
         })
       );
       // inbound API Gateway (digital channel)
-      digitalChannelMessageIntegration = new apigw2i.LambdaProxyIntegration({
-        handler: inboundMessageFunction,
-      });
-
-      digitalChannelHealthCheckIntegration = new apigw2i.LambdaProxyIntegration({
-        handler: healthCheckFunction,
-      });
+      digitalChannelMessageIntegration = new apigw2i.HttpLambdaIntegration(
+        'inboundMessageFunction', inboundMessageFunction);
+      
+      // digitalChannelHealthCheckIntegration = new apigw2i.HttpLambdaIntegration({
+      digitalChannelHealthCheckIntegration = new apigw2i.HttpLambdaIntegration(
+        'healthCheckFunction', healthCheckFunction);
 
       digitalChannelApi = new apigw2.HttpApi(this, 'digitalChannelApi', {
         corsPreflight: {
