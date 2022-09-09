@@ -50,6 +50,7 @@ Please refer to [this blog](https://aws.amazon.com/blogs/contact-center/adding-d
 - CDK deploy using your CLI profile (if you use default profile, don't need to specify the profile flag). Pass in the context required for the cdk stack.
   - If you are deploying SMS channel you need to supply the `pinpointAppId` and `smsNumber` variables.
   - If you are deploying the Facebook channel you need to supply the `fbSecretArn` variable.
+  - If you are deploying PII redaction with any channel you need to supply the `piiRedactionTypes` variable.
 
 ### Deploy SMS channel only
 
@@ -81,6 +82,15 @@ cdk deploy \
 --context fbSecretArn=<YOUR FB SECRET ARN>
 ```
 
+### Deploy FB channel only with PII redaction
+```bash
+cdk deploy \
+--context amazonConnectArn=<YOUR INSTANCE ARN> \
+--context contactFlowId=<YOUR CONTACT FLOW ID>  \
+--context fbSecretArn=<YOUR FB SECRET ARN> \
+--context piiRedactionTypes="<CSV LIST OF AMAZON COMPREHEND PII ENTITY TYPES, EX: PIN, CREDIT_DEBIT_NUMBER>"
+```
+
 ## Architecture
 
 ![](images/full-arch.png)
@@ -90,7 +100,8 @@ cdk deploy \
 1. Customer starts chat/sends message
 2. Chat message is delivered through Amazon Pinpoint (SMS message) or Amazon API Gateway (digital channels such as Facebook messenger).
 3. AWS Lambda records the chat session context in Amazon DynamoDB
-4. AWS Lambda sends the chat message to Amazon Connect
+4. If PII redaction is enabled, AWS Lambda sends the chat message to Amazon Comprehend to detect PII data, then uses the response to filter the message before sending it to Amazon Connect
+5. AWS Lambda sends the chat message to Amazon Connect
 
 ### Agent chat path
 
@@ -116,7 +127,8 @@ cdk deploy \
 The Lambda function code is defined in the `src/lambda` function. We have three Lambda functions
 
 ####`src/lambda/inboundMessageHandler`
-This Lambda function is responsible for the intake of messages from a third party. The entry point will take messages from SNS/Pinpoint for the SMS channel and from API Gateway for Digital channels. Each integrated channel will have a channel handler in which the conversion from the 3rd party message format to a format that Amazon Connect expects will be performed. This Lambda is also responsible for starting new chat contacts in Amazon Connect and the orchistration of mapping a 3rd party chat to a chat in Amazon Connect. DynamoDB is used to store ContactID of the Amazon Connect chat, participant information from Amazon Connect, and the vendor's ID given to us by the third party. Any subsequent messages received from the 3rd party with the same vendor ID will be sent to the respective Amazon Connect chat as indicated in the DynamoDB table.
+This Lambda function is responsible for the intake of messages from a third party. The entry point will take messages from SNS/Pinpoint for the SMS channel and from API Gateway for Digital channels. Each integrated channel will have a channel handler in which the conversion from the 3rd party message format to a format that Amazon Connect expects will be performed. This Lambda is also responsible for starting new chat contacts in Amazon Connect and the orchistration of mapping a 3rd party chat to a chat in Amazon Connect. DynamoDB is used to store ContactID of the Amazon Connect chat, participant information from Amazon Connect, and the vendor's ID given to us by the third party. Any subsequent messages received from the 3rd party with the same vendor ID will be sent to the respective Amazon Connect chat as indicated in the DynamoDB table. 
+If PII redaction is enabled, the Lmabda function sends all customer chat messages to Amazon Comprehend for PII detection, then uses the response to filter the message by replacing selected PII data with `<REDACTED ${obj.Type}>`.
 
 ####`src/lambda/outboundMessageHandler`
 This Lambda function is responsible for messages originating from Amazon Connect with the destination of a third party channel. The ContactID from the message will be used to look up the VendorID and the appropriate channel in DynamoDB. The message is then passed on to the appropriate channel handler for message transformation and invocation of the respective 3rd party API.
@@ -226,7 +238,10 @@ The SNS ARN is malformed, or has different region than the region of Connect Ins
   Refer to the following link with detailed guidance on how to use aws configure command to pass the AWS Key ID and Secret Key:         
   https://docs.aws.amazon.com/cdk/latest/guide/getting_started.html
  
+**8. Where can I find the supported PII Types?**
 
+  Refer to the following link with detailed PII Type information:
+  https://docs.aws.amazon.com/comprehend/latest/dg/how-pii.html
 
   
 

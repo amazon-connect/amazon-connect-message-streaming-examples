@@ -26,8 +26,10 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
     const pinpointAppId = this.node.tryGetContext("pinpointAppId");
     const smsNumber = this.node.tryGetContext("smsNumber");
     const fbSecretArn = this.node.tryGetContext("fbSecretArn");
+    const piiRedactionTypes = this.node.tryGetContext("piiRedactionTypes");
     let enableFB = false;
     let enableSMS = false;
+    let enablePII = false;
 
     // Validating that environment variables are present 
     if(amazonConnectArn === undefined){
@@ -48,10 +50,16 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
       enableSMS = true;
     }
 
-    if(fbSecretArn === undefined){
-      enableFB = false;
-    } else {
+    if(fbSecretArn != undefined){
       enableFB = true;
+    }
+
+    if(piiRedactionTypes != undefined){
+      if (piiRedactionTypes) {
+        enablePII = true;
+      } else {
+        throw new Error("piiRedactionTypes cannot be empty, expecting comma separated values of AWS Comprehend PII types");
+      }
     }
 
     if(enableFB === false && enableSMS === false){
@@ -144,7 +152,7 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
       digitalOutboundMsgStreamingTopic.addToResourcePolicy(digitalOutboundMsgStreamingTopicStatement);
     }
     
-
+    
     // Inbound Lambda function
     const inboundMessageFunction = new lambda.Function(
       this,
@@ -165,7 +173,8 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
           DIGITAL_OUTBOUND_SNS_TOPIC: (digitalOutboundMsgStreamingTopic !== undefined ? digitalOutboundMsgStreamingTopic.topicArn : "" ),
           SMS_OUTBOUND_SNS_TOPIC: (smsOutboundMsgStreamingTopic !== undefined ? smsOutboundMsgStreamingTopic.topicArn : "" ),
           VENDOR_ID_CHANNEL_INDEX_NAME: vendorIdChannelIndexName,
-          DEBUG_LOG: debugLog.valueAsString
+          DEBUG_LOG: debugLog.valueAsString,
+          PII_DETECTION_TYPES: (piiRedactionTypes !== undefined ? piiRedactionTypes : "" )
         },
       }
     );
@@ -181,6 +190,16 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
       new cdk.CfnOutput(this, 'SmsInboundTopic', {
         value: inboundSMSTopic.topicArn.toString(),
       }); 
+    }
+
+    if(enablePII){
+      inboundMessageFunction.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: ['comprehend:DetectPiiEntities'],
+          resources: ['*'],
+          effect: iam.Effect.ALLOW,
+        })
+      );
     }
 
     if(enableFB){

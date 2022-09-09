@@ -3,6 +3,7 @@
 
 const AWS = require('aws-sdk');
 const { log } = require('common-util');
+const redact = require('./redact');
 
 const connect = new AWS.Connect();
 const connectParticipant = new AWS.ConnectParticipant();
@@ -70,9 +71,18 @@ const getOrCreateParticipant = async (channel, vendorId) => {
 };
 
 const sendMessage = async (participant, message) => {
+  let messageToSend = '';
+  if (process.env.PII_DETECTION_TYPES) {
+    messageToSend = await redact.redactPII(message);
+    log.debug(`redactPII returned: ${messageToSend}`);
+  }
+  else {
+    messageToSend = message;
+  }
+
   const params = {
     ConnectionToken: participant.connectionCredentials.token,
-    Content: message,
+    Content: messageToSend,
     ContentType: 'text/plain',
   };
   log.debug('Send message params', params);
