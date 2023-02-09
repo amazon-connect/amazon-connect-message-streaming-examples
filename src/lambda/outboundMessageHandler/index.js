@@ -5,9 +5,11 @@ const AWS = require('aws-sdk');
 const { log } = require('common-util');
 const sms = require('./lib/handlers/sms');
 const fb = require('./lib/handlers/facebook');
+const wa = require('./lib/handlers/whatsapp');
 const { lookupContactId, deleteRecord } = require('./lib/outboundHelper');
 const SMS_CHANNEL_TYPE = 'SMS';
 const FB_CHANNEL_TYPE = 'FACEBOOK';
+const WA_CHANNEL_TYPE = 'WHATSAPP';
 const CUSTOMER_ROLE = 'CUSTOMER';
 const PARTICIPANT_LEFT_CONTENT_TYPE =
   'application/vnd.amazonaws.connect.event.participant.left';
@@ -99,6 +101,9 @@ const handleMessage = async (record, recordLookup) => {
       break;
     case FB_CHANNEL_TYPE:
       await fb.handler(recordLookup.vendorId, JSON.parse(record.Sns.Message));
+      break;
+    case WA_CHANNEL_TYPE:
+      await wa.handler(recordLookup.vendorId, JSON.parse(record.Sns.Message));
       break;
     default:
       log.error(`Unsupported channel type: ${recordLookup.channel}`);

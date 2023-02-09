@@ -26,8 +26,10 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
     const pinpointAppId = this.node.tryGetContext("pinpointAppId");
     const smsNumber = this.node.tryGetContext("smsNumber");
     const fbSecretArn = this.node.tryGetContext("fbSecretArn");
+    const waSecretArn = this.node.tryGetContext("waSecretArn");
     const piiRedactionTypes = this.node.tryGetContext("piiRedactionTypes");
     let enableFB = false;
+    let enableWhatsApp = false;
     let enableSMS = false;
     let enablePII = false;
 
@@ -54,6 +56,10 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
       enableFB = true;
     }
 
+    if(waSecretArn != undefined){
+      enableWhatsApp = true;
+    }
+
     if(piiRedactionTypes != undefined){
       if (piiRedactionTypes) {
         enablePII = true;
@@ -61,9 +67,10 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
         throw new Error("piiRedactionTypes cannot be empty, expecting comma separated values of AWS Comprehend PII types");
       }
     }
+  
 
-    if(enableFB === false && enableSMS === false){
-      throw new Error("Please enable at least one channel, SMS or Facebook. You can do so by providing fbSecretArn in the context to enable Facebook or by providing  pinpointAppId and smsNumber to enable SMS channel");
+    if(enableWhatsApp === false && enableFB === false && enableSMS === false){
+      throw new Error("Please enable at least one channel, SMS, Facebook or WhatsApp. You can do so by providing fbSecretArn in the context to enable Facebook, waSecretArn in the context to enable WhatsApp or by providing  pinpointAppId and smsNumber to enable SMS channel");
     }
 
     const debugLog = new cdk.CfnParameter(this, 'debugLog', {
@@ -133,7 +140,7 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
     let digitalOutboundMsgStreamingTopic;
     let digitalOutboundMsgStreamingTopicStatement;
 
-    if(enableFB){
+    if(enableFB || enableWhatsApp){
       digitalOutboundMsgStreamingTopic = new sns.Topic(
         this,
         'digitalOutboundMsgStreamingTopic',
@@ -167,6 +174,7 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
         memorySize: 512,
         environment: {
           FB_SECRET: fbSecretArn,
+          WA_SECRET: waSecretArn,
           CONTACT_TABLE: chatContactDdbTable.tableName,
           AMAZON_CONNECT_ARN: amazonConnectArn,
           CONTACT_FLOW_ID: contactFlowId,
@@ -211,6 +219,16 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
         })
       );
     }
+    if(enableWhatsApp){
+      inboundMessageFunction.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: ['secretsmanager:GetSecretValue'],
+          resources: [waSecretArn],
+          effect: iam.Effect.ALLOW,
+        })
+      );
+    }
+
 
     inboundMessageFunction.addToRolePolicy(
       new iam.PolicyStatement({
@@ -264,6 +282,7 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
           CONTACT_TABLE: chatContactDdbTable.tableName,
           PINPOINT_APPLICATION_ID: pinpointAppId,
           FB_SECRET: fbSecretArn,
+          WA_SECRET: waSecretArn,
           SMS_NUMBER: smsNumber,
           DEBUG_LOG: debugLog.valueAsString,
         },
@@ -289,6 +308,15 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
         })
       );
     }
+    if(enableWhatsApp){
+      outboundMessageFunction.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: ['secretsmanager:GetSecretValue'],
+          resources: [waSecretArn],
+          effect: iam.Effect.ALLOW,
+        })
+      );
+    }
 
     outboundMessageFunction.addToRolePolicy(
       new iam.PolicyStatement({
@@ -307,7 +335,7 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
     let digitalChannelHealthCheckIntegration: apigw2i.HttpLambdaIntegration;
     let digitalChannelApi;
 
-    if(enableFB){
+    if(enableFB || enableWhatsApp){
       healthCheckFunction = new lambda.Function(
         this,
         'healthCheckFunction',
@@ -320,17 +348,28 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
           environment: {
             DEBUG_LOG: debugLog.valueAsString,
             FB_SECRET: fbSecretArn,
+            WA_SECRET: waSecretArn,
           },
         }
       );
-
-      healthCheckFunction.addToRolePolicy(
-        new iam.PolicyStatement({
-          actions: ['secretsmanager:GetSecretValue'],
-          resources: [fbSecretArn],
-          effect: iam.Effect.ALLOW,
-        })
-      );
+      if(enableFB){
+        healthCheckFunction.addToRolePolicy(
+          new iam.PolicyStatement({
+            actions: ['secretsmanager:GetSecretValue'],
+            resources: [fbSecretArn],
+            effect: iam.Effect.ALLOW,
+          })
+        );
+      }
+      if(enableWhatsApp){
+        healthCheckFunction.addToRolePolicy(
+          new iam.PolicyStatement({
+            actions: ['secretsmanager:GetSecretValue'],
+            resources: [waSecretArn],
+            effect: iam.Effect.ALLOW,
+          })
+        );
+      }
       // inbound API Gateway (digital channel)
       digitalChannelMessageIntegration = new apigw2i.HttpLambdaIntegration(
         'inboundMessageFunction', inboundMessageFunction);
@@ -350,22 +389,37 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
           allowHeaders: ['Content-Type'],
         },
       });
-  
-      digitalChannelApi.addRoutes({
-        path: '/webhook/facebook',
-        methods: [apigw2.HttpMethod.POST],
-        integration: digitalChannelMessageIntegration,
-      });
-  
-      digitalChannelApi.addRoutes({
-        path: '/webhook/facebook',
-        methods: [apigw2.HttpMethod.GET],
-        integration: digitalChannelHealthCheckIntegration,
-      });
+      if(enableFB){
+        digitalChannelApi.addRoutes({
+          path: '/webhook/facebook',
+          methods: [apigw2.HttpMethod.POST],
+          integration: digitalChannelMessageIntegration,
+        });
+        digitalChannelApi.addRoutes({
+          path: '/webhook/facebook',
+          methods: [apigw2.HttpMethod.GET],
+          integration: digitalChannelHealthCheckIntegration,
+        });
+        new cdk.CfnOutput(this, 'FacebookApiGatewayWebhook', {
+          value: digitalChannelApi.apiEndpoint.toString() + '/webhook/facebook',
+        });
+      }
 
-      new cdk.CfnOutput(this, 'FacebookApiGatewayWebhook', {
-        value: digitalChannelApi.apiEndpoint.toString() + '/webhook/facebook',
-      });
+      if(enableWhatsApp){
+        digitalChannelApi.addRoutes({
+          path: '/webhook/whatsapp',
+          methods: [apigw2.HttpMethod.POST],
+          integration: digitalChannelMessageIntegration,
+        });
+        digitalChannelApi.addRoutes({
+          path: '/webhook/whatsapp',
+          methods: [apigw2.HttpMethod.GET],
+          integration: digitalChannelHealthCheckIntegration,
+        });
+        new cdk.CfnOutput(this, 'WhatsAppApiGatewayWebhook', {
+          value: digitalChannelApi.apiEndpoint.toString() + '/webhook/whatsapp',
+        });
+      }
 
       // Outbound lambda subscribe to streaming topic
       if(digitalOutboundMsgStreamingTopic){

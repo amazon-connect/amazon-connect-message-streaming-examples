@@ -4,6 +4,7 @@
 const { log } = require('common-util');
 const sms = require('./lib/handlers/sms');
 const fb = require('./lib/handlers/facebook');
+const wa = require('./lib/handlers/whatsapp');
 
 exports.handler = async (event) => {
   log.debug('Event', event);
@@ -25,10 +26,9 @@ exports.handler = async (event) => {
 
 const processDigitalChannelRequest = async (event) => {
   switch (event.rawPath) {
-    case '/webhook/facebook':
-      log.debug('Facebook channel detected.');
-      const validRequest = await fb.validateRequest(event);
-
+    case '/webhook/whatsapp':
+      log.debug('WhatsApp channel detected.');
+      validRequest = await wa.validateRequest(event);
       if (!validRequest) {
         log.warn('Invalid payload signature');
         return {
@@ -36,10 +36,21 @@ const processDigitalChannelRequest = async (event) => {
           body: 'Request validation failed',
         };
       }
-
+      log.debug('Process event body');
+      await wa.handler(event.body);
+      break;
+    case '/webhook/facebook':
+      log.debug('Facebook channel detected.');
+      validRequest = await fb.validateRequest(event);
+      if (!validRequest) {
+        log.warn('Invalid payload signature');
+        return {
+          statusCode: 403,
+          body: 'Request validation failed',
+        };
+      }
       log.debug('Process event body');
       await fb.handler(event.body);
-
       break;
     default:
       log.warn(

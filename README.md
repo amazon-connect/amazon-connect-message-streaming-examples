@@ -50,6 +50,7 @@ Please refer to [this blog](https://aws.amazon.com/blogs/contact-center/adding-d
 - CDK deploy using your CLI profile (if you use default profile, don't need to specify the profile flag). Pass in the context required for the cdk stack.
   - If you are deploying SMS channel you need to supply the `pinpointAppId` and `smsNumber` variables.
   - If you are deploying the Facebook channel you need to supply the `fbSecretArn` variable.
+  - If you are deploying the WhatsApp channel you need to supply the `waSecretArn` variable.
   - If you are deploying PII redaction with any channel you need to supply the `piiRedactionTypes` variable.
 
 ### Deploy SMS channel only
@@ -69,6 +70,15 @@ cdk deploy \
 --context amazonConnectArn=<YOUR INSTANCE ARN> \
 --context contactFlowId=<YOUR CONTACT FLOW ID>  \
 --context fbSecretArn=<YOUR FB SECRET ARN>
+```
+
+### Deploy WhatsApp Channel only
+
+```bash
+cdk deploy \
+--context amazonConnectArn=<YOUR INSTANCE ARN> \
+--context contactFlowId=<YOUR CONTACT FLOW ID>  \
+--context waSecretArn=<YOUR WHATSAPP SECRET ARN>
 ```
 
 ### Deploy BOTH SMS and FB channel
