@@ -4,9 +4,11 @@
 const https = require('https');
 const AWS = require('aws-sdk');
 const { log } = require('common-util');
+const crypto = require('crypto');
 
 const PATH = '/v15.0';
 let accessToken = undefined;
+let appSecret = undefined;
 let phoneNoId = undefined;
 
 const secretManager = new AWS.SecretsManager();
@@ -44,9 +46,10 @@ const sendMessage = async (toPhoneNumber, message) => {
     },
   };
 
+  const appsecret_proof = crypto.createHmac('sha256', appSecret).update(accessToken).digest('hex');
   const options = {
     host: 'graph.facebook.com',
-    path: `${PATH}/${phoneNoId}/messages`,
+    path: `${PATH}/${phoneNoId}/messages?appsecret_proof=${appsecret_proof}`,
     method: 'POST',
     headers: { 
       'Authorization': `Bearer ${accessToken}`,
@@ -92,6 +95,7 @@ const getWhatsAppSecrets = async () => {
     }
     const response = await secretManager.getSecretValue(params).promise();
     accessToken = JSON.parse(response.SecretString).WA_ACCESS_TOKEN
+    appSecret = JSON.parse(response.SecretString).WA_APP_SECRET
     phoneNoId = JSON.parse(response.SecretString).WA_PHONE_NUMBER_ID
   } else {
     accessToken = null;
