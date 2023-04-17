@@ -6,7 +6,7 @@ const wa = require('./lib/whatsapp');
 const ln = require('./lib/line');
 
 exports.handler = async (event) => {
-  log.debug('Event', event);
+  log.info('Event', event);
 
   switch (event.rawPath) {
     case '/webhook/facebook':
