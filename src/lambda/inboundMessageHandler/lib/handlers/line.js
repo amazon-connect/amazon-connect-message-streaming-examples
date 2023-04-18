@@ -176,7 +176,7 @@ const validateRequest = async (request) => {
 const getLINESecrets = async () => {
   if(process.env.LN_SECRET){
     const params = {
-      SecretId: process.env.FB_SECRET
+      SecretId: process.env.LN_SECRET
     }
     const response = await secretManager.getSecretValue(params).promise();
     appSecret = JSON.parse(response.SecretString).APP_SECRET

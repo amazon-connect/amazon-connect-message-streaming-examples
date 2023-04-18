@@ -27,9 +27,11 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
     const smsNumber = this.node.tryGetContext("smsNumber");
     const fbSecretArn = this.node.tryGetContext("fbSecretArn");
     const waSecretArn = this.node.tryGetContext("waSecretArn");
+    const lnSecretArn = this.node.tryGetContext("lnSecretArn");
     const piiRedactionTypes = this.node.tryGetContext("piiRedactionTypes");
     let enableFB = false;
     let enableWhatsApp = false;
+    let enableLINE = false;
     let enableSMS = false;
     let enablePII = false;
 
@@ -56,6 +58,10 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
       enableFB = true;
     }
 
+    if(lnSecretArn != undefined){
+      enableLINE = true;
+    }
+
     if(waSecretArn != undefined){
       enableWhatsApp = true;
     }
@@ -69,8 +75,8 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
     }
   
 
-    if(enableWhatsApp === false && enableFB === false && enableSMS === false){
-      throw new Error("Please enable at least one channel, SMS, Facebook or WhatsApp. You can do so by providing fbSecretArn in the context to enable Facebook, waSecretArn in the context to enable WhatsApp or by providing  pinpointAppId and smsNumber to enable SMS channel");
+    if(enableLINE === false && enableWhatsApp === false && enableFB === false && enableSMS === false){
+      throw new Error("Please enable at least one channel, SMS, Facebook, LINE or WhatsApp. You can do so by providing fbSecretArn in the context to enable Facebook, waSecretArn in the context to enable WhatsApp or by providing  pinpointAppId and smsNumber to enable SMS channel");
     }
 
     const debugLog = new cdk.CfnParameter(this, 'debugLog', {
@@ -140,7 +146,7 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
     let digitalOutboundMsgStreamingTopic;
     let digitalOutboundMsgStreamingTopicStatement;
 
-    if(enableFB || enableWhatsApp){
+    if(enableFB || enableWhatsApp || enableLINE){
       digitalOutboundMsgStreamingTopic = new sns.Topic(
         this,
         'digitalOutboundMsgStreamingTopic',
@@ -175,6 +181,7 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
         environment: {
           FB_SECRET: fbSecretArn,
           WA_SECRET: waSecretArn,
+          LN_SECRET: lnSecretArn,
           CONTACT_TABLE: chatContactDdbTable.tableName,
           AMAZON_CONNECT_ARN: amazonConnectArn,
           CONTACT_FLOW_ID: contactFlowId,
@@ -224,6 +231,15 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
         new iam.PolicyStatement({
           actions: ['secretsmanager:GetSecretValue'],
           resources: [waSecretArn],
+          effect: iam.Effect.ALLOW,
+        })
+      );
+    }
+    if(enableLINE){
+      inboundMessageFunction.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: ['secretsmanager:GetSecretValue'],
+          resources: [lnSecretArn],
           effect: iam.Effect.ALLOW,
         })
       );
@@ -283,6 +299,7 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
           PINPOINT_APPLICATION_ID: pinpointAppId,
           FB_SECRET: fbSecretArn,
           WA_SECRET: waSecretArn,
+          LN_SECRET: lnSecretArn,
           SMS_NUMBER: smsNumber,
           DEBUG_LOG: debugLog.valueAsString,
         },
@@ -317,6 +334,15 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
         })
       );
     }
+    if(enableLINE){
+      outboundMessageFunction.addToRolePolicy(
+        new iam.PolicyStatement({
+          actions: ['secretsmanager:GetSecretValue'],
+          resources: [lnSecretArn],
+          effect: iam.Effect.ALLOW,
+        })
+      );
+    }
 
     outboundMessageFunction.addToRolePolicy(
       new iam.PolicyStatement({
@@ -335,7 +361,7 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
     let digitalChannelHealthCheckIntegration: apigw2i.HttpLambdaIntegration;
     let digitalChannelApi;
 
-    if(enableFB || enableWhatsApp){
+    if(enableFB || enableWhatsApp || enableLINE){
       healthCheckFunction = new lambda.Function(
         this,
         'healthCheckFunction',
@@ -349,6 +375,7 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
             DEBUG_LOG: debugLog.valueAsString,
             FB_SECRET: fbSecretArn,
             WA_SECRET: waSecretArn,
+            LN_SECRET: lnSecretArn,
           },
         }
       );
@@ -366,6 +393,15 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
           new iam.PolicyStatement({
             actions: ['secretsmanager:GetSecretValue'],
             resources: [waSecretArn],
+            effect: iam.Effect.ALLOW,
+          })
+        );
+      }
+      if(enableLINE){
+        healthCheckFunction.addToRolePolicy(
+          new iam.PolicyStatement({
+            actions: ['secretsmanager:GetSecretValue'],
+            resources: [lnSecretArn],
             effect: iam.Effect.ALLOW,
           })
         );
@@ -418,6 +454,17 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
         });
         new cdk.CfnOutput(this, 'WhatsAppApiGatewayWebhook', {
           value: digitalChannelApi.apiEndpoint.toString() + '/webhook/whatsapp',
+        });
+      }
+
+      if(enableLINE){
+        digitalChannelApi.addRoutes({
+          path: '/webhook/line',
+          methods: [apigw2.HttpMethod.POST],
+          integration: digitalChannelMessageIntegration,
+        });
+        new cdk.CfnOutput(this, 'LINEApiGatewayWebhook', {
+          value: digitalChannelApi.apiEndpoint.toString() + '/webhook/line',
         });
       }
 
