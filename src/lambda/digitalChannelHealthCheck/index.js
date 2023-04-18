@@ -3,10 +3,9 @@
 const { log } = require('common-util');
 const fb = require('./lib/facebook');
 const wa = require('./lib/whatsapp');
-const ln = require('./lib/line');
 
 exports.handler = async (event) => {
-  log.info('Event', event);
+  log.debug('Event', event);
 
   switch (event.rawPath) {
     case '/webhook/facebook':
@@ -15,9 +14,6 @@ exports.handler = async (event) => {
     case '/webhook/whatsapp':
       log.debug('WhatsApp channel detected.');
       return await wa.handler(event);
-      case '/webhook/line':
-        log.debug('LINE channel detected.');
-        return await ln.handler(event);
     default:
       log.warn(
         `Request path "${event.rawPath}" does not match any expected paths.`
