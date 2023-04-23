@@ -3,7 +3,7 @@
 const { log } = require('common-util');
 const fb = require('./lib/facebook');
 const wa = require('./lib/whatsapp');
-const in = require('./lib/instagram');
+const ins = require('./lib/instagram');
 
 exports.handler = async (event) => {
   log.debug('Event', event);
@@ -14,7 +14,7 @@ exports.handler = async (event) => {
       return await fb.handler(event);
     case '/webhook/instagram':
       log.debug('Instagram channel detected.');
-      return await in.handler(event);
+      return await ins.handler(event);
     case '/webhook/whatsapp':
       log.debug('WhatsApp channel detected.');
       return await wa.handler(event);

@@ -76,7 +76,7 @@ export class ChatMessageStreamingExamplesStack extends cdk.Stack {
   
 
     if(enableInstagram == false && enableWhatsApp === false && enableFB === false && enableSMS === false){
-      throw new Error("Please enable at least one channel, SMS, Facebook or WhatsApp. You can do so by providing fbSecretArn in the context to enable Facebook, waSecretArn in the context to enable WhatsApp or by providing  pinpointAppId and smsNumber to enable SMS channel");
+      throw new Error("Please enable at least one channel, SMS, Facebook, Instagram or WhatsApp. You can do so by providing fbSecretArn in the context to enable Facebook, waSecretArn in the context to enable WhatsApp or by providing  pinpointAppId and smsNumber to enable SMS channel");
     }
 
     const debugLog = new cdk.CfnParameter(this, 'debugLog', {
