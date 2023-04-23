@@ -3,7 +3,7 @@
 const { log } = require('common-util');
 const fb = require('./lib/facebook');
 const wa = require('./lib/whatsapp');
-const wa = require('./lib/instagram');
+const in = require('./lib/instagram');
 
 exports.handler = async (event) => {
   log.debug('Event', event);
