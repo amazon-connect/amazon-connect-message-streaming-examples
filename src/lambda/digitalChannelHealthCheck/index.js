@@ -14,7 +14,7 @@ exports.handler = async (event) => {
       return await fb.handler(event);
     case '/webhook/instagram':
       log.debug('Instagram channel detected.');
-      return await fb.handler(event);
+      return await in.handler(event);
     case '/webhook/whatsapp':
       log.debug('WhatsApp channel detected.');
       return await wa.handler(event);

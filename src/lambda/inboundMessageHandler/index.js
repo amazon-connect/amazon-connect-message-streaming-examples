@@ -5,7 +5,7 @@ const { log } = require('common-util');
 const sms = require('./lib/handlers/sms');
 const fb = require('./lib/handlers/facebook');
 const wa = require('./lib/handlers/whatsapp');
-const in = require('./lib/handlers/instagram');
+const ins = require('./lib/handlers/instagram');
 
 exports.handler = async (event) => {
   log.debug('Event', event);
@@ -55,7 +55,7 @@ const processDigitalChannelRequest = async (event) => {
       break;
     case '/webhook/instagram':
       log.debug('Instagram channel detected.');
-      validRequest = await in.validateRequest(event);
+      validRequest = await ins.validateRequest(event);
       if (!validRequest) {
         log.warn('Invalid payload signature');
         return {
@@ -64,7 +64,7 @@ const processDigitalChannelRequest = async (event) => {
         };
       }
       log.debug('Process event body');
-      await in.handler(event.body);
+      await ins.handler(event.body);
       break;
     default:
       log.warn(
