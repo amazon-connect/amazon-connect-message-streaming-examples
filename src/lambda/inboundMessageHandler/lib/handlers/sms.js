@@ -8,7 +8,8 @@ const handler = async (messageString) => {
   const message = JSON.parse(messageString);
   const participant = await inboundHelper.getOrCreateParticipant(
     CHANNEL_TYPE,
-    getVendorId(message)
+    getVendorId(message),
+    message.messageBody.trim().toLowerCase()
   );
 
   await inboundHelper.sendMessage(participant, message.messageBody);
